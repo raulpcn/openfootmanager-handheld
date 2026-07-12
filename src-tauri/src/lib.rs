@@ -1,4 +1,3 @@
-mod application;
 mod commands;
 use commands::*;
 

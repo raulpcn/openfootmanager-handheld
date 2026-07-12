@@ -5,14 +5,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::State;
 
-pub use crate::application::live_match::FinishLiveMatchResponse;
-use crate::application::live_match::{
+pub use ofm_app::live_match::FinishLiveMatchResponse;
+use ofm_app::live_match::{
     apply_match_command as apply_match_command_service,
     finish_live_match as finish_live_match_service,
     get_match_snapshot as get_match_snapshot_service, start_live_match as start_live_match_service,
     step_live_match as step_live_match_service,
 };
-use crate::application::team_talk::apply_team_talk as apply_team_talk_service;
+use ofm_app::team_talk::apply_team_talk as apply_team_talk_service;
 use ofm_core::game::Game;
 use ofm_core::state::StateManager;
 
@@ -607,7 +607,7 @@ mod tests {
         let state = StateManager::new();
         state.set_game(make_game_with_round());
 
-        crate::application::live_match::start_live_match(
+        ofm_app::live_match::start_live_match(
             &state, 0, "spectator", false, None, None,
         )
         .expect("start live match");
@@ -638,7 +638,7 @@ mod tests {
 
         // Session restore: starting again must not re-simulate completed
         // fixtures (simulate_other_matches only touches Scheduled ones).
-        crate::application::live_match::start_live_match(
+        ofm_app::live_match::start_live_match(
             &state, 0, "spectator", false, None, None,
         )
         .expect("restore live match");

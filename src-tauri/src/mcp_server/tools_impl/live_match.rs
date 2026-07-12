@@ -28,7 +28,7 @@ pub fn match_start(
     let fixture_idx = fixture_index as usize;
     let allows_et = allows_extra_time.unwrap_or(true);
 
-    let snapshot = crate::application::live_match::start_live_match(
+    let snapshot = ofm_app::live_match::start_live_match(
         &ctx.state_manager,
         fixture_idx,
         &mode,
@@ -51,7 +51,7 @@ pub fn match_start(
 
 /// Step the live match forward by N minutes.
 pub fn match_step(ctx: Arc<McpContext>, minutes: u16) -> Result<String, String> {
-    let results = crate::application::live_match::step_live_match(
+    let results = ofm_app::live_match::step_live_match(
         &ctx.state_manager,
         minutes,
     )
@@ -65,7 +65,7 @@ pub fn match_step(ctx: Arc<McpContext>, minutes: u16) -> Result<String, String> 
     }
 
     // Get the latest snapshot for score
-    let snapshot = crate::application::live_match::get_match_snapshot(&ctx.state_manager)
+    let snapshot = ofm_app::live_match::get_match_snapshot(&ctx.state_manager)
         .map_err(|e| translate_error(&e))?;
 
     {
@@ -97,7 +97,7 @@ pub fn match_command(
     let command: engine::MatchCommand = serde_json::from_str(&command_json)
         .map_err(|e| format!("Invalid match command JSON: {}", e))?;
 
-    let snapshot = crate::application::live_match::apply_match_command(
+    let snapshot = ofm_app::live_match::apply_match_command(
         &ctx.state_manager,
         command,
     )
@@ -118,7 +118,7 @@ pub fn match_command(
 
 /// Get current match snapshot without advancing time.
 pub fn match_snapshot(ctx: Arc<McpContext>) -> Result<String, String> {
-    let snapshot = crate::application::live_match::get_match_snapshot(&ctx.state_manager)
+    let snapshot = ofm_app::live_match::get_match_snapshot(&ctx.state_manager)
         .map_err(|e| translate_error(&e))?;
 
     Ok(format!(
@@ -134,7 +134,7 @@ pub fn match_snapshot(ctx: Arc<McpContext>) -> Result<String, String> {
 
 /// Finish the live match: generate report, update game state, clean up.
 pub fn match_finish(ctx: Arc<McpContext>) -> Result<String, String> {
-    let response = crate::application::live_match::finish_live_match(&ctx.state_manager)
+    let response = ofm_app::live_match::finish_live_match(&ctx.state_manager)
         .map_err(|e| translate_error(&e))?;
 
     {

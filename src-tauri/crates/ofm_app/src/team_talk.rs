@@ -345,7 +345,7 @@ pub fn apply_team_talk(
         player.morale = new_morale;
         update_recent_team_talk(player, &action_key);
 
-        results.push(serde_json::json!({
+        results.push(serde_json::json!( {
             "player_id": player.id,
             "player_name": player.match_name,
             "old_morale": base_morale,

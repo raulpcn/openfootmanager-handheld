@@ -30,7 +30,7 @@ pub fn season_check_complete(ctx: Arc<McpContext>) -> Result<String, String> {
 pub fn season_advance(ctx: Arc<McpContext>) -> Result<String, String> {
     // The season advance is handled by advancing time through the off-season.
     // In competition mode, this uses delegate mode.
-    let response = crate::application::time_advancement::advance_time_with_mode(
+    let response = ofm_app::time_advancement::advance_time_with_mode(
         &ctx.state_manager,
         "delegate",
     )

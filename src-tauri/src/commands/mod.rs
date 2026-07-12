@@ -8,7 +8,6 @@ pub mod messages;
 pub mod package_editor;
 pub mod portraits;
 pub mod profiles;
-pub mod round_summary;
 pub mod season;
 pub mod settings;
 pub mod sim_lab;

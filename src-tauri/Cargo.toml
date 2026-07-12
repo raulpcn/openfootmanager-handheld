@@ -15,7 +15,7 @@ name = "openfootmanager_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [workspace]
-members = ["crates/ofm_core", "crates/db", "crates/domain", "crates/engine", "crates/sim-bench", "crates/ofm-cli"]
+members = ["crates/ofm_core", "crates/db", "crates/domain", "crates/engine", "crates/ofm_app", "crates/sim-bench", "crates/ofm-cli"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -32,6 +32,7 @@ domain = { path = "crates/domain" }
 ofm_core = { path = "crates/ofm_core" }
 engine = { path = "crates/engine" }
 db = { path = "crates/db" }
+ofm_app = { path = "crates/ofm_app" }
 chrono = "0.4.44"
 rand = "0.10"
 semver = "1"
