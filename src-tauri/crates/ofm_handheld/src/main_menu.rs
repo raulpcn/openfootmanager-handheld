@@ -31,8 +31,8 @@ impl crate::screen::Screen for MainMenu {
                 ScreenAction::None
             }
             Key::Enter => {
-                println!("Selected: {}", self.items[self.selected]);
                 match self.items[self.selected] {
+                    "New Game" => ScreenAction::SwitchTo("team_selection"),
                     "Exit" => ScreenAction::Exit,
                     _ => ScreenAction::None,
                 }

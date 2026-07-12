@@ -1,6 +1,9 @@
+mod dashboard;
 mod font;
+mod game_state;
 mod main_menu;
 mod screen;
+mod team_selection;
 
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use screen::ScreenManager;
@@ -17,7 +20,16 @@ fn main() {
     )
     .expect("Unable to open window");
 
-    let mut manager = ScreenManager::new(vec![Box::new(main_menu::MainMenu::new())]);
+    let game_state = game_state::SharedGameState::new();
+
+    let mut manager = ScreenManager::new(vec![
+        ("main_menu", Box::new(main_menu::MainMenu::new())),
+        (
+            "team_selection",
+            Box::new(team_selection::TeamSelection::new(game_state.clone())),
+        ),
+        ("dashboard", Box::new(dashboard::Dashboard::new(game_state))),
+    ]);
     let mut buf = vec![0u32; W * H];
 
     while window.is_open() && !window.is_key_down(Key::Escape) {

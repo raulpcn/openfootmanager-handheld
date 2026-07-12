@@ -3,6 +3,7 @@ use minifb::Key;
 pub enum ScreenAction {
     None,
     Exit,
+    SwitchTo(&'static str),
 }
 
 pub trait Screen {
@@ -11,23 +12,31 @@ pub trait Screen {
 }
 
 pub struct ScreenManager {
-    screens: Vec<Box<dyn Screen>>,
-    current: usize,
+    screens: std::collections::HashMap<&'static str, Box<dyn Screen>>,
+    current: &'static str,
 }
 
 impl ScreenManager {
-    pub fn new(screens: Vec<Box<dyn Screen>>) -> Self {
+    pub fn new(screens: Vec<(&'static str, Box<dyn Screen>)>) -> Self {
+        let current = screens[0].0;
+        let map = screens.into_iter().collect();
         Self {
-            screens,
-            current: 0,
+            screens: map,
+            current,
         }
     }
 
     pub fn handle_input(&mut self, keys: &[Key]) {
         for &key in keys {
-            match self.screens[self.current].handle_key(key) {
+            let action = self.screens.get_mut(self.current).unwrap().handle_key(key);
+            match action {
                 ScreenAction::None => {}
                 ScreenAction::Exit => std::process::exit(0),
+                ScreenAction::SwitchTo(name) => {
+                    if self.screens.contains_key(name) {
+                        self.current = name;
+                    }
+                }
             }
         }
     }
