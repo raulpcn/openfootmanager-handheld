@@ -1,7 +1,10 @@
 mod dashboard;
+mod fired_screen;
 mod font;
 mod game_state;
 mod main_menu;
+mod match_screen;
+mod recap_screen;
 mod screen;
 mod team_selection;
 
@@ -28,7 +31,13 @@ fn main() {
             "team_selection",
             Box::new(team_selection::TeamSelection::new(game_state.clone())),
         ),
-        ("dashboard", Box::new(dashboard::Dashboard::new(game_state))),
+        ("dashboard", Box::new(dashboard::Dashboard::new(game_state.clone()))),
+        (
+            "recap",
+            Box::new(recap_screen::RecapScreen::new(game_state.clone())),
+        ),
+        ("match", Box::new(match_screen::MatchScreen::new(game_state.clone()))),
+        ("fired", Box::new(fired_screen::FiredScreen::new(game_state))),
     ]);
     let mut buf = vec![0u32; W * H];
 

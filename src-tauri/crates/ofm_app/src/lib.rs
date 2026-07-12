@@ -1,3 +1,4 @@
+pub mod game_setup;
 pub mod live_match;
 pub mod round_summary;
 pub mod team_talk;

@@ -11,6 +11,8 @@ const MENU_ITEMS: &[&str] = &["Continue", "Save", "Exit"];
 pub struct Dashboard {
     game_state: Arc<SharedGameState>,
     selected: usize,
+    /// Blockers to display if present
+    blockers: Vec<serde_json::Value>,
 }
 
 impl Dashboard {
@@ -18,36 +20,96 @@ impl Dashboard {
         Self {
             game_state,
             selected: 0,
+            blockers: vec![],
         }
     }
 
     fn with_game<R>(&self, f: impl FnOnce(&ofm_core::game::Game) -> R) -> Option<R> {
-        let guard = self.game_state.game.lock().ok()?;
-        guard.as_ref().map(f)
+        self.game_state.state.get_game(|g| f(g))
+    }
+
+    fn do_continue(&mut self) -> ScreenAction {
+        self.blockers.clear();
+
+        // Check blockers (same path as desktop: useAdvanceTime → checkBlockingActions)
+        let blockers = self.game_state.state.get_game(|g| {
+            ofm_app::time_blockers::compute_blocking_actions(g)
+        });
+        if let Some(blockers) = blockers {
+            if !blockers.is_empty() {
+                self.blockers = blockers;
+                return ScreenAction::None;
+            }
+        }
+
+        // Advance time (same path as desktop: advanceTimeWithMode → "delegate")
+        let result = ofm_app::time_advancement::advance_time_with_mode(
+            &self.game_state.state,
+            "delegate",
+        );
+
+        match result {
+            Ok(resp) => match resp.action.as_str() {
+                "advanced" => {
+                    if let Some(game) = resp.game {
+                        self.game_state.state.set_game(game);
+                    }
+                    // Store results for the recap screen (same data desktop shows)
+                    *self.game_state.recap_results.lock().unwrap() = resp.results;
+                    ScreenAction::SwitchTo("recap")
+                }
+                "live_match" => {
+                    // Store snapshot for the match screen (same as desktop navigate("/match"))
+                    if let Some(snap) = resp.snapshot {
+                        *self.game_state.match_snapshot.lock().unwrap() = Some(snap);
+                        *self.game_state.match_mode.lock().unwrap() =
+                            resp.mode.unwrap_or_else(|| "delegate".into());
+                        *self.game_state.match_fixture_index.lock().unwrap() =
+                            resp.fixture_index.unwrap_or(0);
+                        return ScreenAction::SwitchTo("match");
+                    }
+                    ScreenAction::None
+                }
+                "fired" => {
+                    if let Some(game) = resp.game {
+                        self.game_state.state.set_game(game);
+                    }
+                    ScreenAction::SwitchTo("fired")
+                }
+                _ => ScreenAction::None,
+            },
+            Err(_) => ScreenAction::None,
+        }
     }
 }
 
 impl crate::screen::Screen for Dashboard {
     fn handle_key(&mut self, key: Key) -> ScreenAction {
+        // Dismiss blockers with any key
+        if !self.blockers.is_empty() {
+            self.blockers.clear();
+            return ScreenAction::None;
+        }
+
         match key {
             Key::Up => {
                 self.selected = self.selected.saturating_sub(1);
+                ScreenAction::None
             }
             Key::Down => {
                 if self.selected + 1 < MENU_ITEMS.len() {
                     self.selected += 1;
                 }
+                ScreenAction::None
             }
-            Key::Enter => {
-                match MENU_ITEMS[self.selected] {
-                    "Exit" => return ScreenAction::Exit,
-                    _ => {}
-                }
-            }
-            Key::Escape => return ScreenAction::Exit,
-            _ => {}
+            Key::Enter => match MENU_ITEMS[self.selected] {
+                "Continue" => return self.do_continue(),
+                "Exit" => return ScreenAction::Exit,
+                _ => ScreenAction::None,
+            },
+            Key::Escape => ScreenAction::Exit,
+            _ => ScreenAction::None,
         }
-        ScreenAction::None
     }
 
     fn render(&self, buf: &mut [u32]) {
@@ -77,12 +139,7 @@ impl crate::screen::Screen for Dashboard {
                 (manager, club, league, date)
             })
             .unwrap_or_else(|| {
-                (
-                    "N/A".into(),
-                    "N/A".into(),
-                    "N/A".into(),
-                    "N/A".into(),
-                )
+                ("N/A".into(), "N/A".into(), "N/A".into(), "N/A".into())
             });
 
         let y_start = 80;
@@ -99,9 +156,24 @@ impl crate::screen::Screen for Dashboard {
             font::draw_text(buf, value, 220, y, 0xFFFFFF, 2);
         }
 
-        let menu_y = 260;
-        font::draw_text(buf, "---", 60, menu_y - 10, 0x444444, 1);
+        // Show blockers
+        if !self.blockers.is_empty() {
+            let by = 220;
+            font::draw_text(buf, "Attention required:", 60, by, 0xFF8800, 2);
+            for (i, blocker) in self.blockers.iter().take(4).enumerate() {
+                let text = blocker
+                    .get("text_key")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Unknown issue");
+                let y = by + 30 + i as i32 * 24;
+                font::draw_text(buf, text, 80, y, 0xCCCCCC, 1);
+            }
+            font::draw_text(buf, "Press any key to continue", 120, by + 140, 0x666666, 1);
+            return;
+        }
 
+        // Menu
+        let menu_y = 260;
         for (i, item) in MENU_ITEMS.iter().enumerate() {
             let y = menu_y + i as i32 * 35;
             let is_selected = i == self.selected;

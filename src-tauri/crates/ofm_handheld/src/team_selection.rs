@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 
-use chrono::Datelike;
 use minifb::Key;
 
 use crate::font;
@@ -43,7 +42,17 @@ impl TeamSelection {
                 eprintln!("[handheld] starting world generation...");
                 let wd = ofm_core::generator::generate_world_data(None);
                 eprintln!("[handheld] world generated, {} teams", wd.teams.len());
-                let clock = ofm_core::clock::GameClock::new(chrono::Utc::now());
+
+                let startup_options = ofm_app::game_setup::StartupOptions {
+                    start_year: ofm_app::game_setup::default_start_year(),
+                    start_phase: ofm_app::game_setup::StartPhase::SeasonStart,
+                    history_depth_years: ofm_app::game_setup::DEFAULT_GENERATED_HISTORY_DEPTH_YEARS,
+                };
+                let clock = ofm_app::game_setup::game_clock_for_world(
+                    &startup_options,
+                    &wd.metadata,
+                )
+                .expect("failed to create game clock");
                 let manager = domain::manager::Manager::new(
                     "handheld_manager".into(),
                     "Manager".into(),
@@ -51,8 +60,12 @@ impl TeamSelection {
                     "1990-01-01".into(),
                     "ENG".into(),
                 );
-                let game = ofm_core::game::Game::new(
-                    clock, manager, wd.teams, wd.players, wd.staff, vec![],
+
+                let (game, _stats) = ofm_app::game_setup::build_game_from_world_data(
+                    clock,
+                    manager,
+                    &startup_options,
+                    wd,
                 );
 
                 let mut teams: Vec<TeamEntry> = game
@@ -115,69 +128,55 @@ impl TeamSelection {
             None => return,
         };
 
-        // Set manager's team
-        sw.game.manager.team_id = Some(team_id.to_string());
-
-        // Build a minimal league from the selected team's country
-        let country = sw
-            .game
-            .teams
-            .iter()
-            .find(|t| t.id == team_id)
-            .map(|t| t.football_nation.clone())
-            .unwrap_or_default();
-
-        let team_ids: Vec<String> = sw
-            .game
-            .teams
-            .iter()
-            .filter(|t| t.football_nation == country)
-            .map(|t| t.id.clone())
-            .collect();
-
-        if team_ids.len() >= 2 {
-            let country_lower = country.to_lowercase();
-            let country_label = ofm_core::nations::nation_display_name(&country);
-            let def = ofm_core::generator::CompetitionDefinition {
-                id: format!("{country_lower}-d1"),
-                name: format!("{country_label} Division 1"),
-                r#type: domain::league::CompetitionType::League,
-                scope: domain::league::CompetitionScope::Domestic,
-                region_id: None,
-                country_id: Some(country.clone()),
-                required_region_ids: vec![],
-                priority: 0,
-                format: ofm_core::generator::FormatDef {
-                    kind: domain::league::CompetitionFormat::LeagueTable,
-                    legs: None,
-                    group_size: None,
-                    qualifiers_per_group: None,
-                    best_third_qualifiers: None,
-                },
-                participants: ofm_core::generator::ParticipantSpec {
-                    explicit: Some(team_ids),
-                    selector: None,
-                },
-                berths: vec![],
-                season_start_month: Some(8),
-                season_start_day: Some(1),
-                name_key: None,
-                logo: None,
-            };
-
-            let season = sw.game.clock.current_date.date_naive().year() as u32;
-            if let Some(league) = ofm_core::generator::build_explicit_competition(
-                &def,
-                season,
-                sw.game.clock.start_date,
-            ) {
-                sw.game.competitions.push(league);
-                sw.game.sync_legacy_league();
+        // Hemisphere fix: align clock to the club's actual season-start date
+        // so southern-hemisphere clubs begin at the right time of year.
+        // Same logic as desktop select_team.
+        if ofm_app::game_setup::start_phase_for_game(&sw.game)
+            == ofm_app::game_setup::StartPhase::SeasonStart
+        {
+            if let Some(actual_start) =
+                ofm_app::game_setup::team_season_anchor(&sw.game, team_id)
+            {
+                if actual_start < sw.game.clock.current_date {
+                    sw.game.clock.current_date = actual_start;
+                    sw.game.clock.start_date = actual_start;
+                    ofm_app::game_setup::rebuild_competitions_for_management_date(
+                        &mut sw.game,
+                        actual_start,
+                    );
+                    sw.game.national_teams.clear();
+                    ofm_app::game_setup::ensure_multi_competition_foundations(&mut sw.game);
+                }
             }
         }
 
-        // Store the game in shared state for the dashboard
-        *self.game_state.game.lock().unwrap() = Some(sw.game.clone());
+        // Scope active regions/competitions to the user's team — same as desktop.
+        let (resolved_regions, resolved_competitions) =
+            ofm_app::game_setup::resolve_simulation_scope(
+                &sw.game,
+                team_id,
+                None,
+                None,
+            )
+            .unwrap_or_else(|_| (vec![], vec![]));
+        sw.game.active_region_ids = resolved_regions;
+        sw.game.active_competition_ids = resolved_competitions;
+
+        let start_phase = ofm_app::game_setup::start_phase_for_game(&sw.game);
+        let result = ofm_app::game_setup::bootstrap_team_selection(
+            &mut sw.game,
+            team_id,
+            start_phase,
+            domain::stats::StatsState::default(),
+        );
+        if let Err(e) = result {
+            eprintln!("[handheld] bootstrap_team_selection failed: {e}");
+            return;
+        }
+
+        ofm_core::player_identity::upgrade_game_player_identities(&mut sw.game);
+
+        self.game_state.state.set_game(sw.game.clone());
     }
 }
 
