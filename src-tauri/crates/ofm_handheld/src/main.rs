@@ -1,16 +1,17 @@
-use ofm_core::state::StateManager;
+use minifb::{Key, Window, WindowOptions};
 
 fn main() {
-    println!("OpenFootManager Handheld initialized");
+    let mut window = Window::new(
+        "OpenFootManager Handheld",
+        640,
+        480,
+        WindowOptions::default(),
+    )
+    .expect("Unable to open window");
 
-    let state = StateManager::new();
+    let black = vec![0u32; 640 * 480];
 
-    // Prove the shared application layer is reachable without Tauri.
-    let result = ofm_app::live_match::get_match_snapshot(&state);
-    match result {
-        Err(e) => println!("ofm_app call succeeded (expected error): {e}"),
-        Ok(_) => println!("ofm_app call returned unexpected Ok"),
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        window.update_with_buffer(&black, 640, 480).unwrap();
     }
-
-    println!("Done");
 }

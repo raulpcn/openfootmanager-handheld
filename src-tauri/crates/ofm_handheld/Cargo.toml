@@ -9,3 +9,4 @@ ofm_core = { path = "../ofm_core" }
 domain = { path = "../domain" }
 engine = { path = "../engine" }
 log = "0.4"
+minifb = "0.27"
