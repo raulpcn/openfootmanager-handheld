@@ -3,12 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GameStateData } from "../store/gameStore";
 import { useGameStore } from "../store/gameStore";
 import type { BlockerModal } from "./useAdvanceTime.helpers";
-import {
-  advanceTimeWithMode,
-  checkBlockingActions,
-  skipToMatchDay,
-  type SkipToMatchDayResponse,
-} from "../services/advanceTimeService";
+import { gameApi, type SkipToMatchDayResponse } from "../api";
 import {
   buildAdvanceRecap,
   toDatePart,
@@ -103,7 +98,7 @@ export function useAdvanceTime(
       useGameStore.getState().gameState?.clock?.current_date,
     );
     try {
-      const result = await advanceTimeWithMode(effectiveMode);
+      const result = await gameApi.time.advanceTimeWithMode(effectiveMode);
       console.info("[useAdvanceTime] doAdvance:result", {
         action: result.action,
         fixtureIndex: result.fixture_index,
@@ -162,7 +157,7 @@ export function useAdvanceTime(
     const runContinue = continueToNextEvent
       ? () => void startDigest()
       : () => doAdvance(resolvedMode);
-    const blockers = await checkBlockingActions("handleContinue");
+    const blockers = await gameApi.time.checkBlockingActions();
     if (blockers.length > 0) {
       setBlockerModal({ blockers, pendingAction: runContinue });
       return;
@@ -178,7 +173,7 @@ export function useAdvanceTime(
   const handleSkipToMatchDay = async () => {
     if (isAdvancing) return;
     console.info("[useAdvanceTime] handleSkipToMatchDay:start");
-    const blockers = await checkBlockingActions("handleSkipToMatchDay");
+    const blockers = await gameApi.time.checkBlockingActions();
     if (blockers.length > 0) {
       setBlockerModal({ blockers, pendingAction: doSkipToMatchDay });
       return;
@@ -227,7 +222,7 @@ export function useAdvanceTime(
   };
 
   const doSkipToMatchDay = () =>
-    runMultiDayAdvance(skipToMatchDay, "doSkipToMatchDay");
+    runMultiDayAdvance(gameApi.time.skipToMatchDay, "doSkipToMatchDay");
 
   return {
     isAdvancing,

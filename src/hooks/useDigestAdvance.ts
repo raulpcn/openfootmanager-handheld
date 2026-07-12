@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 
 import type { GameStateData } from "../store/gameStore";
-import type { BlockerData } from "../services/advanceTimeService";
-import { advanceOneDay } from "../services/advanceTimeService";
+import type { BlockerData } from "../api";
+import { gameApi } from "../api";
 import { buildAdvanceRecap } from "../components/dashboard/advanceRecap";
 import type { AdvanceRecap } from "../components/dashboard/advanceRecap";
 
@@ -50,7 +50,7 @@ export function useDigestAdvance(
           return;
         }
 
-        const result = await advanceOneDay();
+        const result = await gameApi.time.advanceOneDay();
 
         if (abortRef.current) {
           setStopReason({ kind: "stopped" });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { applyExtraTranslations } from "../lib/extraTranslations";
 import type { JSX } from "react";
 import { useNavigate } from "react-router-dom";
-import { invoke } from "@tauri-apps/api/core";
+import { gameApi } from "../api";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import type { MatchModeType } from "../hooks/useAdvanceTime";
@@ -120,8 +120,8 @@ export default function Dashboard(): JSX.Element {
     useState<SquadListSortState>(DEFAULT_SQUAD_LIST_SORT_STATE);
   const loadActiveGameState = useCallback(async () => {
     const [stateResult, saveIdResult] = await Promise.allSettled([
-      invoke<GameStateData>("get_active_game"),
-      invoke<string | null>("get_active_save_id"),
+      gameApi.session.getActiveGame(),
+      gameApi.session.getActiveSaveId(),
     ]);
 
     if (stateResult.status === "rejected") {
@@ -297,7 +297,7 @@ export default function Dashboard(): JSX.Element {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      await invoke("save_game");
+      await gameApi.session.saveGame();
       markClean();
       setSaveFlash(true);
       setTimeout(() => setSaveFlash(false), 2000);
@@ -330,7 +330,7 @@ export default function Dashboard(): JSX.Element {
     setShowCloseConfirm(false);
     if (save) {
       try {
-        await invoke("save_game");
+        await gameApi.session.saveGame();
         markClean();
       } catch (err) {
         console.error("Auto-save on close failed:", err);
@@ -390,7 +390,7 @@ export default function Dashboard(): JSX.Element {
 
     setIsExitingToMenu(true);
     try {
-      await invoke("exit_to_menu");
+      await gameApi.session.exitToMenu();
       clearGame();
       navigate("/");
     } catch (err) {
