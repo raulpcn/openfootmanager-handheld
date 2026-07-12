@@ -1,0 +1,11 @@
+[package]
+name = "ofm_handheld"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ofm_app = { path = "../ofm_app" }
+ofm_core = { path = "../ofm_core" }
+domain = { path = "../domain" }
+engine = { path = "../engine" }
+log = "0.4"
