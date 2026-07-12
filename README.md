@@ -2,26 +2,26 @@
 
 ![Openfoot logo](images/openfootlogo.svg)
 
-[![License: GPL v3](https://img.shields.io/github/license/openfootmanager/openfootmanager
+[![License: GPL v3](https://img.shields.io/github/license/raulpcn/openfootmanager-handheld
 )](https://www.gnu.org/licenses/gpl-3.0)
 [![Rust](https://shields.io/badge/-Rust-FF4500?style=flat&logo=rust)](https://www.rust-lang.org/)
 [![Tauri](https://shields.io/badge/-Tauri-2E8B57?style=flat&logo=tauri)](https://tauri.app/)
 [![React](https://shields.io/badge/-React-1434A4?style=flat&logo=react)](https://react.dev/)
-[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/openfootmanager/openfootmanager?utm_source=oss&utm_medium=github&utm_campaign=openfootmanager%2Fopenfootmanager&labelColor=171717&color=FF570A&label=CodeRabbit+Reviews)](https://coderabbit.ai)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/openfootmanager/openfootmanager/graphs/commit-activity)
-[![Last commit](https://img.shields.io/github/last-commit/openfootmanager/openfootmanager)](https://github.com/openfootmanager/openfootmanager/commits/develop)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/raulpcn/openfootmanager-handheld?utm_source=oss&utm_medium=github&utm_campaign=raulpcn%2Fopenfootmanager-handheld&labelColor=171717&color=FF570A&label=CodeRabbit+Reviews)](https://coderabbit.ai)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/raulpcn/openfootmanager-handheld/graphs/commit-activity)
+[![Last commit](https://img.shields.io/github/last-commit/raulpcn/openfootmanager-handheld)](https://github.com/raulpcn/openfootmanager-handheld/commits)
 
-**A free and open source football management simulation game**
+**Openfoot Manager Handheld — a RG35XX H-focused build of Openfoot Manager**
 
 [Features](#features) • [Screenshots](#screenshots) • [Installation](#installation--development) • [Contributing](#contributing) • [License](#license)
 
-Join the community on Discord: https://discord.gg/2CXaesaukT
+Repository: https://github.com/raulpcn/openfootmanager-handheld
 
 </div>
 
 ---
 
-**Openfoot Manager** is a free and open source football/soccer manager game, licensed under the [GPLv3](LICENSE.md), inspired by the famous franchise Football Manager&trade;.
+**Openfoot Manager Handheld** is a free and open source football/soccer manager game fork, focused on the RG35XX H handheld experience and licensed under the [GPLv3](LICENSE.md), inspired by the famous franchise Football Manager&trade;.
 
 ## FEATURES
 
@@ -52,7 +52,7 @@ Click any image to open the full-size version.
 
 ## ARCHITECTURE
 
-OpenFootManager is built using modern web technologies:
+Openfoot Manager Handheld is built using modern web technologies:
 
 - **Rust**: Blazing-fast backend for the Match Simulation Engine and Game State.
 - **Tauri**: Lightweight desktop application shell.
@@ -61,7 +61,7 @@ OpenFootManager is built using modern web technologies:
 
 ## INSTALLATION & DEVELOPMENT
 
-The game is still in early active development. To build and run the debug version, you need to install standard tools for Rust, Node, and Tauri development:
+This project tracks Openfoot Manager for handheld use. To build and run this fork, you need to install standard tools for Rust, Node, and Tauri development:
 
 1. Install **Rust** (via `rustup`)
 2. Install **Node.js** (v18+)
@@ -70,8 +70,8 @@ The game is still in early active development. To build and run the debug versio
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/openfootmanager/openfootmanager.git
-cd openfootmanager
+git clone https://github.com/raulpcn/openfootmanager-handheld.git
+cd openfootmanager-handheld
 npm install
 ```
 
@@ -85,12 +85,12 @@ npm run tauri dev
 
 Contributions are welcome. For full guidelines, read [CONTRIBUTING](CONTRIBUTING.md).
 
-If you want to discuss ideas, share feedback, or follow development more casually, join the Discord server: https://discord.gg/2CXaesaukT
+If you want to discuss ideas or share feedback, open an issue in this repository.
 
 Quick contribution checklist:
 
 1. Open an Issue first for bugs, enhancements, or larger feature ideas.
-2. Work from a feature branch and open Pull Requests targeting `develop`.
+2. Work from a feature branch and open Pull Requests targeting the main development branch.
 3. Run tests before submitting:
 
 ```bash
